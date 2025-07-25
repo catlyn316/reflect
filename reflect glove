@@ -1,0 +1,488 @@
+-- 基本服務與玩家
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- GUI 主體
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "MaolingHub"
+
+-- 自動刪除ColorCorrection
+pcall(function()
+    local lighting = game:GetService("Lighting")
+    local colorCorrection = lighting:FindFirstChild("ColorCorrection")
+    if colorCorrection then
+        colorCorrection:Destroy()
+        print("已刪除 Lighting.ColorCorrection")
+    end
+end)
+
+-- 修正：主框架樣式
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 450, 0, 350)
+Frame.Position = UDim2.new(0.5, -225, 0.5, -175)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+
+-- 添加漸層效果
+local gradient = Instance.new("UIGradient", Frame)
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 35)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 50))
+}
+gradient.Rotation = 45
+
+-- 添加外發光效果
+local stroke = Instance.new("UIStroke", Frame)
+stroke.Color = Color3.fromRGB(100, 150, 255)
+stroke.Thickness = 2
+stroke.Transparency = 0.5
+
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 15)
+
+-- 修正：標題樣式
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, -80, 0, 50)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "✨ 貓玲的腳本區 ✨"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- 添加標題發光效果
+local titleStroke = Instance.new("UIStroke", Title)
+titleStroke.Color = Color3.fromRGB(100, 150, 255)
+titleStroke.Thickness = 1
+titleStroke.Transparency = 0.3
+
+-- 修正：關閉按鈕樣式和功能
+local Close = Instance.new("TextButton", Frame)
+Close.Size = UDim2.new(0, 35, 0, 35)
+Close.Position = UDim2.new(1, -40, 0, 8)
+Close.Text = "x"
+Close.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+Close.TextColor3 = Color3.fromRGB(255, 255, 255)
+Close.Font = Enum.Font.GothamBold
+Close.TextSize = 18
+Close.BorderSizePixel = 0
+
+-- 添加關閉按鈕效果
+local closeGradient = Instance.new("UIGradient", Close)
+closeGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 60, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 40, 40))
+}
+
+Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 8)
+
+-- 修正：關閉按鈕功能
+Close.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+    _G.maolingHubLoaded = false -- 重置載入狀態
+end)
+
+-- 修正：最小化按鈕樣式
+local Minimize = Instance.new("TextButton", Frame)
+Minimize.Size = UDim2.new(0, 35, 0, 35)
+Minimize.Position = UDim2.new(1, -80, 0, 8)
+Minimize.Text = "─"
+Minimize.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+Minimize.Font = Enum.Font.GothamBold
+Minimize.TextSize = 16
+Minimize.BorderSizePixel = 0
+
+local minimizeGradient = Instance.new("UIGradient", Minimize)
+minimizeGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 100, 120)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 80, 100))
+}
+
+Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 8)
+
+-- 修正：側邊欄為可滾動
+local SideBar = Instance.new("ScrollingFrame", Frame)
+SideBar.Size = UDim2.new(0, 130, 1, -55)
+SideBar.Position = UDim2.new(0, 5, 0, 50)
+SideBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+SideBar.BorderSizePixel = 0
+SideBar.ScrollBarThickness = 6
+SideBar.CanvasSize = UDim2.new(0, 0, 0, 200)
+SideBar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+SideBar.ScrollingDirection = Enum.ScrollingDirection.Y
+
+-- 添加側邊欄樣式
+local sidebarGradient = Instance.new("UIGradient", SideBar)
+sidebarGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(45, 45, 65))
+}
+
+Instance.new("UICorner", SideBar).CornerRadius = UDim.new(0, 10)
+
+-- 添加UIListLayout到側邊欄
+local sidebarLayout = Instance.new("UIListLayout", SideBar)
+sidebarLayout.Padding = UDim.new(0, 8)
+sidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- 修正：內容區域
+local Content = Instance.new("Frame", Frame)
+Content.Size = UDim2.new(1, -145, 1, -55)
+Content.Position = UDim2.new(0, 140, 0, 50)
+Content.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+Content.BorderSizePixel = 0
+
+local contentGradient = Instance.new("UIGradient", Content)
+contentGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 50, 75))
+}
+
+Instance.new("UICorner", Content).CornerRadius = UDim.new(0, 10)
+
+-- 修正：縮小功能的尺寸
+local isMinimized = false
+local fullSize = UDim2.new(0, 450, 0, 350)
+local miniSize = UDim2.new(0, 450, 0, 50)
+
+Minimize.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    SideBar.Visible = not isMinimized
+    Content.Visible = not isMinimized
+    Frame.Size = isMinimized and miniSize or fullSize
+end)
+
+-- 修正：簡單高亮文字的分區按鈕樣式
+local function createSectionButton(text, order, parent)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0, 120, 0, 45)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(85, 85, 105)
+    
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextTransparency = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.BorderSizePixel = 0
+    
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+    
+    local btnStroke = Instance.new("UIStroke", btn)
+    btnStroke.Color = Color3.fromRGB(150, 180, 255)
+    btnStroke.Thickness = 1
+    btnStroke.Transparency = 0.6
+    
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(105, 105, 125)
+        btnStroke.Transparency = 0.3
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(85, 85, 105)
+        btnStroke.Transparency = 0.6
+    end)
+    
+    return btn
+end
+
+-- 修正：簡單高亮文字的一般按鈕樣式
+local function createButton(text, order, parent, spacing)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0, 180, 0, 35)
+    btn.Position = UDim2.new(0.5, -90, 0, 10 + (order - 1) * spacing)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
+    
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 16
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    local btnStroke = Instance.new("UIStroke", btn)
+    btnStroke.Color = Color3.fromRGB(120, 170, 255)
+    btnStroke.Thickness = 1
+    btnStroke.Transparency = 0.6
+    
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(100, 160, 240)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btnStroke.Transparency = 0.3
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btnStroke.Transparency = 0.6
+    end)
+    
+    return btn
+end
+
+-- 添加滾動框樣式改善
+local function styleScrollFrame(scrollFrame)
+    scrollFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
+    
+    local scrollGradient = Instance.new("UIGradient", scrollFrame)
+    scrollGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 65)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(55, 55, 80))
+    }
+    
+    Instance.new("UICorner", scrollFrame).CornerRadius = UDim.new(0, 8)
+end
+
+-- 映射手套功能變量
+local shadowNpcActive = false
+local flyEnabled = false
+local speedEnabled = false
+local originalSpeed = 0
+local bodyVelocity = nil
+local bodyAngularVelocity = nil
+local speedConnection = nil
+
+-- 傳送到傳送門功能
+local function teleportToPortal()
+    local character = LocalPlayer.Character
+    if not (character and character:FindFirstChild("HumanoidRootPart")) then
+        return
+    end
+    
+    -- 偵測Stage1~3哪個存在
+    for i = 1, 3 do
+        local stageName = "Stage" .. i
+        local stage = Workspace:FindFirstChild(stageName)
+        
+        if stage then
+            local lobby = stage:FindFirstChild("Lobby")
+            if lobby then
+                local portals = lobby:FindFirstChild("Portals")
+                if portals then
+                    local teleportTarget = nil
+                    
+                    if i == 3 then
+                        -- Stage3 使用 default.Teleport2
+                        local default = portals:FindFirstChild("default")
+                        if default then
+                            teleportTarget = default:FindFirstChild("Teleport2")
+                        end
+                    else
+                        -- Stage1 和 Stage2 使用 normal.Teleport1
+                        local normal = portals:FindFirstChild("normal")
+                        if normal then
+                            teleportTarget = normal:FindFirstChild("Teleport1")
+                        end
+                    end
+                    
+                    if teleportTarget then
+                        -- 傳送到找到的目標位置
+                        character.HumanoidRootPart.CFrame = teleportTarget.CFrame
+                        if i == 3 then
+                            print("傳送到 " .. stageName .. " 的 default.Teleport2")
+                        else
+                            print("傳送到 " .. stageName .. " 的 normal.Teleport1")
+                        end
+                        return
+                    end
+                end
+            end
+        end
+    end
+    
+    -- 如果沒有找到任何Stage，顯示訊息
+    print("未找到任何可用的Stage傳送門")
+end
+
+-- 功能函數
+local function toggleShadowNpcAttack()
+    shadowNpcActive = not shadowNpcActive
+    
+    if shadowNpcActive then
+        -- 開始攻擊所有shadow_npc
+        _G.shadowNpcConnection = RunService.Heartbeat:Connect(function()
+            for _, npc in pairs(workspace:GetDescendants()) do
+                if npc.Name == "shadow_npc" and npc:FindFirstChild("Head") then
+                    pcall(function()
+                        local args = {
+                            [1] = "Hit",
+                            [2] = npc.Head
+                        }
+                        LocalPlayer.Character.Evolg.Network:FireServer(unpack(args))
+                    end)
+                end
+            end
+        end)
+    else
+        -- 停止攻擊
+        if _G.shadowNpcConnection then
+            _G.shadowNpcConnection:Disconnect()
+            _G.shadowNpcConnection = nil
+        end
+    end
+end
+
+local function toggleFly()
+    flyEnabled = not flyEnabled
+    local character = LocalPlayer.Character
+    
+    if flyEnabled and character and character:FindFirstChild("HumanoidRootPart") then
+        local rootPart = character.HumanoidRootPart
+        
+        -- 直接傳送到固定位置
+        rootPart.CFrame = CFrame.new(317, 218, 76)
+        
+        -- 創建飛行物理保持在該位置
+        bodyVelocity = Instance.new("BodyVelocity", rootPart)
+        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        
+        bodyAngularVelocity = Instance.new("BodyAngularVelocity", rootPart)
+        bodyAngularVelocity.MaxTorque = Vector3.new(4000, 4000, 4000)
+        bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+        
+        -- 保持在固定位置
+        _G.flyConnection = RunService.Heartbeat:Connect(function()
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                -- 如果玩家偏離太遠就拉回來
+                local currentPos = character.HumanoidRootPart.Position
+                local targetPos = Vector3.new(317, 218, 76)
+                if (currentPos - targetPos).Magnitude > 5 then
+                    character.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+                end
+            end
+        end)
+    else
+        -- 停止飛行
+        if bodyVelocity then
+            bodyVelocity:Destroy()
+            bodyVelocity = nil
+        end
+        if bodyAngularVelocity then
+            bodyAngularVelocity:Destroy()
+            bodyAngularVelocity = nil
+        end
+        if _G.flyConnection then
+            _G.flyConnection:Disconnect()
+            _G.flyConnection = nil
+        end
+    end
+end
+
+local function toggleSpeed()
+    speedEnabled = not speedEnabled
+    local character = LocalPlayer.Character
+    
+    if speedEnabled and character and character:FindFirstChild("Humanoid") then
+        local humanoid = character.Humanoid
+        originalSpeed = humanoid.WalkSpeed
+        
+        -- 設置固定速度為45
+        speedConnection = RunService.Heartbeat:Connect(function()
+            if character and character:FindFirstChild("Humanoid") then
+                character.Humanoid.WalkSpeed = 45
+            end
+        end)
+    else
+        -- 恢復原本速度
+        if speedConnection then
+            speedConnection:Disconnect()
+            speedConnection = nil
+        end
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.WalkSpeed = originalSpeed > 0 and originalSpeed or 16
+        end
+    end
+end
+
+-- 創建映射手套分區
+local mappingGlovesSection = createSectionButton("映射手套", 1, SideBar)
+
+-- 創建映射手套內容區域
+local mappingContent = Instance.new("ScrollingFrame", Content)
+mappingContent.Size = UDim2.new(1, 0, 1, 0)
+mappingContent.Position = UDim2.new(0, 0, 0, 0)
+mappingContent.BackgroundTransparency = 1
+mappingContent.ScrollBarThickness = 6
+mappingContent.CanvasSize = UDim2.new(0, 0, 0, 200)
+mappingContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+mappingContent.ScrollingDirection = Enum.ScrollingDirection.Y
+mappingContent.Visible = true
+
+styleScrollFrame(mappingContent)
+
+-- 創建四個功能按鈕
+local button1 = createButton("第一關", 1, mappingContent, 50)
+local button2 = createButton("第二關", 2, mappingContent, 50)
+local button3 = createButton("第三關", 3, mappingContent, 50)
+local button4 = createButton("傳送到傳送門", 4, mappingContent, 50)
+
+-- 按鈕點擊事件
+button1.MouseButton1Click:Connect(function()
+    toggleShadowNpcAttack()
+    button1.Text = shadowNpcActive and "第一關 (開啟)" or "第一關"
+    button1.BackgroundColor3 = shadowNpcActive and Color3.fromRGB(60, 180, 75) or Color3.fromRGB(80, 140, 220)
+end)
+
+button2.MouseButton1Click:Connect(function()
+    toggleFly()
+    button2.Text = flyEnabled and "第二關 (開啟)" or "第二關"
+    button2.BackgroundColor3 = flyEnabled and Color3.fromRGB(60, 180, 75) or Color3.fromRGB(80, 140, 220)
+end)
+
+button3.MouseButton1Click:Connect(function()
+    toggleSpeed()
+    button3.Text = speedEnabled and "第三關 (開啟)" or "第三關"
+    button3.BackgroundColor3 = speedEnabled and Color3.fromRGB(60, 180, 75) or Color3.fromRGB(80, 140, 220)
+end)
+
+button4.MouseButton1Click:Connect(function()
+    teleportToPortal()
+end)
+
+-- 分區按鈕點擊事件
+mappingGlovesSection.MouseButton1Click:Connect(function()
+    -- 隱藏所有其他內容
+    for _, child in pairs(Content:GetChildren()) do
+        if child:IsA("ScrollingFrame") then
+            child.Visible = false
+        end
+    end
+    
+    -- 顯示映射手套內容
+    mappingContent.Visible = true
+end)
+
+-- 清理函數（當GUI關閉時）
+local function cleanup()
+    if _G.shadowNpcConnection then
+        _G.shadowNpcConnection:Disconnect()
+    end
+    if _G.flyConnection then
+        _G.flyConnection:Disconnect()
+    end
+    if speedConnection then
+        speedConnection:Disconnect()
+    end
+    if bodyVelocity then
+        bodyVelocity:Destroy()
+    end
+    if bodyAngularVelocity then
+        bodyAngularVelocity:Destroy()
+    end
+end
+
+-- 當GUI被銷毀時執行清理
+ScreenGui.AncestryChanged:Connect(function()
+    if not ScreenGui.Parent then
+        cleanup()
+    end
+end)
