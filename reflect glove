@@ -404,7 +404,7 @@ local function toggleSpeed()
 end
 
 -- 創建映射手套分區
-local mappingGlovesSection = createSectionButton("映射手套", 1, SideBar)
+local mappingGlovesSection = createSectionButton("反射手套", 1, SideBar)
 
 -- 創建映射手套內容區域
 local mappingContent = Instance.new("ScrollingFrame", Content)
