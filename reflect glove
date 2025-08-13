@@ -336,8 +336,12 @@ local function toggleFly()
     if flyEnabled and character and character:FindFirstChild("HumanoidRootPart") then
         local rootPart = character.HumanoidRootPart
         
-        -- 直接傳送到固定位置
-        rootPart.CFrame = CFrame.new(317, 218, 76)
+        -- 記住原始位置
+        _G.originalPosition = rootPart.Position
+        
+        -- 傳送到當前位置上方30單位
+        local flyPosition = _G.originalPosition + Vector3.new(0, 30, 0)
+        rootPart.CFrame = CFrame.new(flyPosition)
         
         -- 創建飛行物理保持在該位置
         bodyVelocity = Instance.new("BodyVelocity", rootPart)
@@ -348,20 +352,20 @@ local function toggleFly()
         bodyAngularVelocity.MaxTorque = Vector3.new(4000, 4000, 4000)
         bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
         
-        -- 保持在固定位置
+        -- 保持在飛行位置
         _G.flyConnection = RunService.Heartbeat:Connect(function()
             if character and character:FindFirstChild("HumanoidRootPart") then
                 bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                -- 如果玩家偏離太遠就拉回來
+                -- 如果玩家偏離飛行位置太遠就拉回來
                 local currentPos = character.HumanoidRootPart.Position
-                local targetPos = Vector3.new(317, 218, 76)
+                local targetPos = _G.originalPosition + Vector3.new(0, 30, 0)
                 if (currentPos - targetPos).Magnitude > 5 then
                     character.HumanoidRootPart.CFrame = CFrame.new(targetPos)
                 end
             end
         end)
     else
-        -- 停止飛行
+        -- 停止飛行並回到原位
         if bodyVelocity then
             bodyVelocity:Destroy()
             bodyVelocity = nil
@@ -374,6 +378,11 @@ local function toggleFly()
             _G.flyConnection:Disconnect()
             _G.flyConnection = nil
         end
+        
+        -- 回到原始位置
+        if _G.originalPosition and character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(_G.originalPosition)
+        end
     end
 end
 
@@ -385,10 +394,10 @@ local function toggleSpeed()
         local humanoid = character.Humanoid
         originalSpeed = humanoid.WalkSpeed
         
-        -- 設置固定速度為45
+        -- 設置固定速度為50
         speedConnection = RunService.Heartbeat:Connect(function()
             if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid.WalkSpeed = 45
+                character.Humanoid.WalkSpeed = 50
             end
         end)
     else
